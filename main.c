@@ -1,3 +1,9 @@
+/*
+IPK project 1
+Author: Jindřich Vodák
+Login: xvodak06
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
