@@ -90,7 +90,7 @@ int get_hostname()
     FILE *hostname = popen("cat /proc/sys/kernel/hostname | head -n 1", "r");
     fgets(buffer, PROC_LINE_LENGTH, hostname);
 
-    fprintf(stderr, "%s\n", buffer);
+    fprintf(stderr, "%s", buffer);
     return 0;
 }
 
@@ -100,7 +100,7 @@ int get_cpu_name()
     FILE *cpu_name = popen("cat /proc/cpuinfo | grep \"model name\" | head -n 1 | awk -F': ' '{print $2}'", "r");
     fgets(buffer, PROC_LINE_LENGTH, cpu_name);
 
-    fprintf(stderr, "%s\n", buffer);
+    fprintf(stderr, "%s", buffer);
     return 0;
 }
 
