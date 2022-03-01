@@ -104,22 +104,30 @@ int get_cpu_name()
     return 0;
 }
 
+int test()  // DELETE
+{
+    fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n");
+
+    fprintf(stderr, "\033[0;34mTEST_CPU START\033[0m\n");
+    get_cpu_usage();
+    fprintf(stderr, "\033[0;34mTEST_CPU END\033[0m\n\n");
+
+    fprintf(stderr, "\033[0;33mTEST_HOSTNAME START\033[0m\n");
+    get_hostname();
+    fprintf(stderr, "\033[0;33mTEST_HOSTNAME END\033[0m\n\n");
+
+    fprintf(stderr, "\033[0;35mTEST_CPUNAME START\033[0m\n");
+    get_cpu_name();
+    fprintf(stderr, "\033[0;35mTEST_CPUNAME END\033[0m\n\n");
+
+    fprintf(stderr, "\033[0;31mTEST_MAIN END\033[0m\n");
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
-    fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n"); // DELETE
+    test();
 
-    fprintf(stderr, "\033[0;34mTEST_CPU START\033[0m\n"); // DELETE
-    get_cpu_usage();
-    fprintf(stderr, "\033[0;34mTEST_CPU END\033[0m\n\n"); // DELETE
-
-    fprintf(stderr, "\033[0;33mTEST_HOSTNAME START\033[0m\n"); // DELETE
-    get_hostname();
-    fprintf(stderr, "\033[0;33mTEST_HOSTNAME END\033[0m\n\n"); // DELETE
-
-    fprintf(stderr, "\033[0;35mTEST_CPUNAME START\033[0m\n"); // DELETE
-    get_cpu_name();
-    fprintf(stderr, "\033[0;35mTEST_CPUNAME END\033[0m\n\n"); // DELETE
-
-    fprintf(stderr, "\033[0;31mTEST_MAIN END\033[0m\n"); // DELETE
     return 0;
 }
