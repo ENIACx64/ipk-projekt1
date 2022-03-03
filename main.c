@@ -167,13 +167,24 @@ int main(int argc, char *argv[])
         set_error(2);
     }
 
+    int endpoint = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    int option = 1;
+    setsockopt(endpoint, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(int));
+    setsockopt(endpoint, SOL_SOCKET, SO_REUSEPORT, (const char *)&option, sizeof(int));
+
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = INADDR_ANY;
+
+    bind(endpoint, (struct sockaddr *)&address, sizeof(address));
+
+    listen(endpoint, 3);
+
     while (1)
     {
-        int endpoint = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-        int option = 1;
-        setsockopt(endpoint, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(int));
-        setsockopt(endpoint, SOL_SOCKET, SO_REUSEPORT, (const char *)&option, sizeof(int));
+        //accept();
     }
 
     return 0;
