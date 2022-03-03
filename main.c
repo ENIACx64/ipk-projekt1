@@ -13,6 +13,31 @@ Login: xvodak06
 
 #define PROC_LINE_LENGTH 128
 
+/*
+    ERROR CODES
+
+    1 - uncorrect arguments
+    2 - invalid port
+*/
+
+void set_error(int error_code)
+{
+    switch (error_code)
+    {
+    case 1:
+        fprintf(stderr, "\033[0;31mERROR 1:\033[0m       Uncorrect arguments! Usage: ./hinfosvc <port>\n");
+        break;
+    case 2:
+        fprintf(stderr, "\033[0;31mERROR 2:\033[0m       Invalid port!\n");
+        break;
+    default:
+        fprintf(stderr, "\033[0;31mERROR:\033[0m         Undefined error, application will end...\n");
+        break;
+    }
+
+    exit(error_code);
+}
+
 int get_cpu_usage()
 {
     unsigned long long int usertime, nicetime, systemtime, idletime;
@@ -104,7 +129,7 @@ int get_cpu_name()
     return 0;
 }
 
-int test()  // DELETE
+int test() // DELETE
 {
     fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n");
 
@@ -127,7 +152,29 @@ int test()  // DELETE
 
 int main(int argc, char *argv[])
 {
-    test();
+    if (argc != 2)
+    {
+        set_error(1);
+    }
+
+    long port;
+    char *next_char;
+
+    port = strtol(argv[1], &next_char, 10);
+
+    if ((next_char == argv[1]) || (*next_char != '\0'))
+    {
+        set_error(2);
+    }
+
+    while (1)
+    {
+        int endpoint = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+        int option = 1;
+        setsockopt(endpoint, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(int));
+        setsockopt(endpoint, SOL_SOCKET, SO_REUSEPORT, (const char *)&option, sizeof(int));
+    }
 
     return 0;
 }
