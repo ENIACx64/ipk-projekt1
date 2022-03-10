@@ -230,24 +230,25 @@ int main(int argc, char *argv[])
             get_cpu_usage(tail);
         }
 
-        int length = strlen(tail);
-        char* reply = malloc(sizeof(char) * (strlen(header) + length));
+        char reply[PROC_LINE_LENGTH];
 
-        char* to_append = malloc(sizeof(char) * length);
+        int breakpoint;
 
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < strlen(header); i++)
         {
-            to_append[i] = tail[i];
+            reply[i] = header[i];
+            breakpoint = i;
         }
 
-        strcat(reply, header);
-        strcat(reply, to_append);
+        breakpoint++;
 
-        fprintf(stderr, "test header:\n%s\n", header);
-        fprintf(stderr, "test size of header: %ld\n", (sizeof(header) / sizeof(char)));
+        for (int i = 0; i < strlen(tail); i++)
+        {
+            reply[breakpoint + i] = tail[i];
+        }
 
         // MODIFY
-        send(client, header, sizeof(header), 0);
+        send(client, reply, strlen(reply), 0);
         close(client);
     }
 
