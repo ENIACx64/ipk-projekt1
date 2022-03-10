@@ -43,7 +43,7 @@ void set_error(int error_code)
     exit(error_code);
 }
 
-void get_cpu_usage(char* output)
+void get_cpu_usage(char *output)
 {
     unsigned long long int usertime, nicetime, systemtime, idletime;
     unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
@@ -93,9 +93,6 @@ void get_cpu_usage(char* output)
                    &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
         }
 
-        pclose(procinfo1);
-        pclose(procinfo2);
-
         double previdle = previdletime + previoWait;
         double idle = idletime + ioWait;
 
@@ -113,32 +110,32 @@ void get_cpu_usage(char* output)
         total_percentage += percentage / 12;
     }
 
+    pclose(procinfo1);
+    pclose(procinfo2);
+
     char buffer[PROC_LINE_LENGTH + 1];
     sprintf(buffer, "%d%%", (int)total_percentage);
     strcpy(output, buffer);
 }
 
-char* get_hostname()
+void get_hostname(char *output)
 {
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *hostname = popen("cat /proc/sys/kernel/hostname | head -n 1", "r");
     fgets(buffer, PROC_LINE_LENGTH, hostname);
     pclose(hostname);
 
-    char* result = buffer;
-    
-    return buffer;
+    strcpy(output, buffer);
 }
 
-int get_cpu_name()
+void get_cpu_name(char *output)
 {
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *cpu_name = popen("cat /proc/cpuinfo | grep \"model name\" | head -n 1 | awk -F': ' '{print $2}'", "r");
     fgets(buffer, PROC_LINE_LENGTH, cpu_name);
     pclose(cpu_name);
 
-    fprintf(stderr, "%s\n", buffer);
-    return 0;
+    strcpy(output, buffer);
 }
 
 int test() // DELETE
@@ -157,14 +154,15 @@ int test() // DELETE
 
     // TEST_HOSTNAME
     fprintf(stderr, "\033[0;33mTEST_HOSTNAME START\033[0m\n");
-    get_hostname();
+    get_hostname(buffer);
     fprintf(stderr, "%s\n", buffer);
     buffer[0] = '\0';
     fprintf(stderr, "\033[0;33mTEST_HOSTNAME END\033[0m\n\n");
 
     // TEST_CPUNAME
     fprintf(stderr, "\033[0;35mTEST_CPUNAME START\033[0m\n");
-    get_cpu_name();
+    get_cpu_name(buffer);
+    fprintf(stderr, "%s\n", buffer);
     buffer[0] = '\0';
     fprintf(stderr, "\033[0;35mTEST_CPUNAME END\033[0m\n\n");
 
@@ -176,9 +174,6 @@ int test() // DELETE
 
 int main(int argc, char *argv[])
 {
-    // DELETE
-    test();
-
     if (argc != 2)
     {
         set_error(1);
@@ -216,21 +211,40 @@ int main(int argc, char *argv[])
     while (1)
     {
         client = accept(endpoint, (struct sockaddr *)&address, (socklen_t *)&address_size);
-        char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/plain;\r\n\r\n";
+        char *header = "HTTP/1.1 200 OK\r\nContent-Type: text/plain;\r\n\r\n";
+        char tail[PROC_LINE_LENGTH];
 
-        // POSSIBLE ISSUE
-        buffer[0] = '\0';
+        memset(buffer, '\0', sizeof(buffer));
+        memset(tail, '\0', sizeof(tail));
 
         int is_ok = read(client, buffer, sizeof(buffer));
 
         if (is_ok == -1)
         {
-            // EXITS THE PROGRAM - RESOLVE?
             close(client);
             set_error(3);
         }
 
-        fprintf(stderr, "%s\n", buffer);
+        if (strncmp(buffer, "GET /load", 9) == 0)
+        {
+            get_cpu_usage(tail);
+        }
+
+        int length = strlen(tail);
+        char* reply = malloc(sizeof(char) * (strlen(header) + length));
+
+        char* to_append = malloc(sizeof(char) * length);
+
+        for (int i = 0; i < length; i++)
+        {
+            to_append[i] = tail[i];
+        }
+
+        strcat(reply, header);
+        strcat(reply, to_append);
+
+        fprintf(stderr, "test header:\n%s\n", header);
+        fprintf(stderr, "test size of header: %ld\n", (sizeof(header) / sizeof(char)));
 
         // MODIFY
         send(client, header, sizeof(header), 0);
