@@ -43,7 +43,7 @@ void set_error(int error_code)
     exit(error_code);
 }
 
-int get_cpu_usage()
+void get_cpu_usage(char* output)
 {
     unsigned long long int usertime, nicetime, systemtime, idletime;
     unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
@@ -93,6 +93,9 @@ int get_cpu_usage()
                    &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
         }
 
+        pclose(procinfo1);
+        pclose(procinfo2);
+
         double previdle = previdletime + previoWait;
         double idle = idletime + ioWait;
 
@@ -110,26 +113,21 @@ int get_cpu_usage()
         total_percentage += percentage / 12;
     }
 
-    /*char* result = "\0";
-    char* percent = "%";
-    sprintf(result, "%d", (int)total_percentage);
-    strcat(result, percent);
-
-    fprintf(stderr, "%s\n", result);
-    return 0;*/
-
-    fprintf(stderr, "%d%%\n", (int)total_percentage);
-    return 0;
+    char buffer[PROC_LINE_LENGTH + 1];
+    sprintf(buffer, "%d%%", (int)total_percentage);
+    strcpy(output, buffer);
 }
 
-int get_hostname()
+char* get_hostname()
 {
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *hostname = popen("cat /proc/sys/kernel/hostname | head -n 1", "r");
     fgets(buffer, PROC_LINE_LENGTH, hostname);
+    pclose(hostname);
 
-    fprintf(stderr, "%s\n", buffer);
-    return 0;
+    char* result = buffer;
+    
+    return buffer;
 }
 
 int get_cpu_name()
@@ -137,6 +135,7 @@ int get_cpu_name()
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *cpu_name = popen("cat /proc/cpuinfo | grep \"model name\" | head -n 1 | awk -F': ' '{print $2}'", "r");
     fgets(buffer, PROC_LINE_LENGTH, cpu_name);
+    pclose(cpu_name);
 
     fprintf(stderr, "%s\n", buffer);
     return 0;
@@ -144,22 +143,32 @@ int get_cpu_name()
 
 int test() // DELETE
 {
-    char* buffer = "\0";
+    char buffer[PROC_LINE_LENGTH + 1];
 
+    // TEST_MAIN START
     fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n");
 
+    // TEST_CPU
     fprintf(stderr, "\033[0;34mTEST_CPU START\033[0m\n");
-    get_cpu_usage();
+    get_cpu_usage(buffer);
+    fprintf(stderr, "%s\n", buffer);
+    buffer[0] = '\0';
     fprintf(stderr, "\033[0;34mTEST_CPU END\033[0m\n\n");
 
+    // TEST_HOSTNAME
     fprintf(stderr, "\033[0;33mTEST_HOSTNAME START\033[0m\n");
     get_hostname();
+    fprintf(stderr, "%s\n", buffer);
+    buffer[0] = '\0';
     fprintf(stderr, "\033[0;33mTEST_HOSTNAME END\033[0m\n\n");
 
+    // TEST_CPUNAME
     fprintf(stderr, "\033[0;35mTEST_CPUNAME START\033[0m\n");
     get_cpu_name();
+    buffer[0] = '\0';
     fprintf(stderr, "\033[0;35mTEST_CPUNAME END\033[0m\n\n");
 
+    // TEST_MAIN END
     fprintf(stderr, "\033[0;31mTEST_MAIN END\033[0m\n");
 
     return 0;
