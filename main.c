@@ -22,6 +22,7 @@ Login: xvodak06
     3 - invalid read
 */
 
+// sets the error code and exits the application
 void set_error(int error_code)
 {
     switch (error_code)
@@ -43,8 +44,10 @@ void set_error(int error_code)
     exit(error_code);
 }
 
+// gets the CPU usage and stores it in parameter "output"
 void get_cpu_usage(char *output)
 {
+    // declaration of variables
     unsigned long long int usertime, nicetime, systemtime, idletime;
     unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
     ioWait = irq = softIrq = steal = guest = guestnice = 0;
@@ -58,6 +61,7 @@ void get_cpu_usage(char *output)
 
     unsigned cpu_count;
 
+    // gets the CPU data from filesystem
     FILE *cpuinfo = popen("lscpu -a -p=cpu | tail -1", "r");
     fgets(buffer1, PROC_LINE_LENGTH, cpuinfo);
     sscanf(buffer1, "%u", &cpu_count);
@@ -65,12 +69,17 @@ void get_cpu_usage(char *output)
 
     buffer1[0] = '\0';
 
+    // loads two data sets
     FILE *procinfo1 = popen("cat /proc/stat", "r");
     sleep(1);
     FILE *procinfo2 = popen("cat /proc/stat", "r");
 
     double total_percentage = 0;
 
+    /*
+    * loops for each logical CPU core and calculates data
+    * (https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux)
+    */
     for (unsigned i = 0; i < cpu_count; i++)
     {
         fgets(buffer1, PROC_LINE_LENGTH, procinfo1);
@@ -113,67 +122,42 @@ void get_cpu_usage(char *output)
     pclose(procinfo1);
     pclose(procinfo2);
 
+    // formats the output and stores it
     char buffer[PROC_LINE_LENGTH + 1];
-    sprintf(buffer, "%d%%", (int)total_percentage);
+    sprintf(buffer, "%d%%\n", (int)total_percentage);
     strcpy(output, buffer);
 }
 
+// gets the hostname and stores it in parameter "output"
 void get_hostname(char *output)
 {
+    // gets the hostname data from filesystem
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *hostname = popen("cat /proc/sys/kernel/hostname | head -n 1", "r");
     fgets(buffer, PROC_LINE_LENGTH, hostname);
     pclose(hostname);
 
+    // formats the output and stores it
     strcpy(output, buffer);
 }
 
+// gets the CPU name and stores it in parameter "output"
 void get_cpu_name(char *output)
 {
+    // gets the CPU name data from filesystem
     char buffer[PROC_LINE_LENGTH + 1];
     FILE *cpu_name = popen("cat /proc/cpuinfo | grep \"model name\" | head -n 1 | awk -F': ' '{print $2}'", "r");
     fgets(buffer, PROC_LINE_LENGTH, cpu_name);
     pclose(cpu_name);
 
+    // formats the output and stores it
     strcpy(output, buffer);
 }
 
-int test() // DELETE
-{
-    char buffer[PROC_LINE_LENGTH + 1];
-
-    // TEST_MAIN START
-    fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n");
-
-    // TEST_CPU
-    fprintf(stderr, "\033[0;34mTEST_CPU START\033[0m\n");
-    get_cpu_usage(buffer);
-    fprintf(stderr, "%s\n", buffer);
-    buffer[0] = '\0';
-    fprintf(stderr, "\033[0;34mTEST_CPU END\033[0m\n\n");
-
-    // TEST_HOSTNAME
-    fprintf(stderr, "\033[0;33mTEST_HOSTNAME START\033[0m\n");
-    get_hostname(buffer);
-    fprintf(stderr, "%s\n", buffer);
-    buffer[0] = '\0';
-    fprintf(stderr, "\033[0;33mTEST_HOSTNAME END\033[0m\n\n");
-
-    // TEST_CPUNAME
-    fprintf(stderr, "\033[0;35mTEST_CPUNAME START\033[0m\n");
-    get_cpu_name(buffer);
-    fprintf(stderr, "%s\n", buffer);
-    buffer[0] = '\0';
-    fprintf(stderr, "\033[0;35mTEST_CPUNAME END\033[0m\n\n");
-
-    // TEST_MAIN END
-    fprintf(stderr, "\033[0;31mTEST_MAIN END\033[0m\n");
-
-    return 0;
-}
-
+// main() function
 int main(int argc, char *argv[])
 {
+    // checks if arguments are correct and parses port argument
     if (argc != 2)
     {
         set_error(1);
@@ -189,49 +173,76 @@ int main(int argc, char *argv[])
         set_error(2);
     }
 
+    // opens the socket for communication
     int endpoint = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     int client;
 
+    // sets correct options
     int option = 1;
     setsockopt(endpoint, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(int));
     setsockopt(endpoint, SOL_SOCKET, SO_REUSEPORT, (const char *)&option, sizeof(int));
 
+    // sets the address correctly
     struct sockaddr_in address;
     int address_size = sizeof(address);
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = INADDR_ANY;
 
+    // gets the socket ready and starts to listen on the port
     bind(endpoint, (struct sockaddr *)&address, sizeof(address));
-
     listen(endpoint, 3);
 
+    // declares buffer
     char buffer[PROC_LINE_LENGTH];
 
+    // while loop - always true
     while (1)
     {
+        // creates new socket and declares important variables
         client = accept(endpoint, (struct sockaddr *)&address, (socklen_t *)&address_size);
         char *header = "HTTP/1.1 200 OK\r\nContent-Type: text/plain;\r\n\r\n";
         char tail[PROC_LINE_LENGTH];
+        char reply[PROC_LINE_LENGTH];
 
-        memset(buffer, '\0', sizeof(buffer));
-        memset(tail, '\0', sizeof(tail));
+        // clears all buffers
+        memset(buffer, 0, sizeof(buffer));
+        memset(tail, 0, sizeof(tail));
+        memset(reply, 0, sizeof(reply));
 
+        // gets the request
         int is_ok = read(client, buffer, sizeof(buffer));
 
+        // checks if request is invalid
         if (is_ok == -1)
         {
             close(client);
             set_error(3);
         }
 
+        // parses and then processes the request by calling the relevant function
         if (strncmp(buffer, "GET /load", 9) == 0)
         {
+            fprintf(stderr, "INCOMING REQUEST: LOAD\n");
             get_cpu_usage(tail);
         }
+        else if (strncmp(buffer, "GET /hostname", 13) == 0)
+        {
+            fprintf(stderr, "INCOMING REQUEST: HOSTNAME\n");
+            get_hostname(tail);
+        }
+        else if (strncmp(buffer, "GET /cpu-name", 13) == 0)
+        {
+            fprintf(stderr, "INCOMING REQUEST: CPU-NAME\n");
+            get_cpu_name(tail);
+        }
+        else
+        {
+            fprintf(stderr, "INCOMING REQUEST: BAD REQUEST\n");
+            strcat(tail, "400 BAD REQUEST\n");
+        }
 
-        char reply[PROC_LINE_LENGTH];
-
+        // formats the response
         int breakpoint;
 
         for (int i = 0; i < strlen(header); i++)
@@ -247,7 +258,7 @@ int main(int argc, char *argv[])
             reply[breakpoint + i] = tail[i];
         }
 
-        // MODIFY
+        // sends the response and closes the socket
         send(client, reply, strlen(reply), 0);
         close(client);
     }
