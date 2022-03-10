@@ -6,6 +6,7 @@ Login: xvodak06
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -18,6 +19,7 @@ Login: xvodak06
 
     1 - uncorrect arguments
     2 - invalid port
+    3 - invalid read
 */
 
 void set_error(int error_code)
@@ -29,6 +31,9 @@ void set_error(int error_code)
         break;
     case 2:
         fprintf(stderr, "\033[0;31mERROR 2:\033[0m       Invalid port!\n");
+        break;
+    case 3:
+        fprintf(stderr, "\033[0;31mERROR 3:\033[0m       Read operation has failed!\n");
         break;
     default:
         fprintf(stderr, "\033[0;31mERROR:\033[0m         Undefined error, application will end...\n");
@@ -66,7 +71,7 @@ int get_cpu_usage()
 
     double total_percentage = 0;
 
-    for (int i = 0; i < cpu_count; i++)
+    for (unsigned i = 0; i < cpu_count; i++)
     {
         fgets(buffer1, PROC_LINE_LENGTH, procinfo1);
         fgets(buffer2, PROC_LINE_LENGTH, procinfo2);
@@ -105,6 +110,14 @@ int get_cpu_usage()
         total_percentage += percentage / 12;
     }
 
+    /*char* result = "\0";
+    char* percent = "%";
+    sprintf(result, "%d", (int)total_percentage);
+    strcat(result, percent);
+
+    fprintf(stderr, "%s\n", result);
+    return 0;*/
+
     fprintf(stderr, "%d%%\n", (int)total_percentage);
     return 0;
 }
@@ -115,7 +128,7 @@ int get_hostname()
     FILE *hostname = popen("cat /proc/sys/kernel/hostname | head -n 1", "r");
     fgets(buffer, PROC_LINE_LENGTH, hostname);
 
-    fprintf(stderr, "%s", buffer);
+    fprintf(stderr, "%s\n", buffer);
     return 0;
 }
 
@@ -125,12 +138,14 @@ int get_cpu_name()
     FILE *cpu_name = popen("cat /proc/cpuinfo | grep \"model name\" | head -n 1 | awk -F': ' '{print $2}'", "r");
     fgets(buffer, PROC_LINE_LENGTH, cpu_name);
 
-    fprintf(stderr, "%s", buffer);
+    fprintf(stderr, "%s\n", buffer);
     return 0;
 }
 
 int test() // DELETE
 {
+    char* buffer = "\0";
+
     fprintf(stderr, "\033[0;31mTEST_MAIN START\033[0m\n\n");
 
     fprintf(stderr, "\033[0;34mTEST_CPU START\033[0m\n");
@@ -152,6 +167,9 @@ int test() // DELETE
 
 int main(int argc, char *argv[])
 {
+    // DELETE
+    test();
+
     if (argc != 2)
     {
         set_error(1);
@@ -168,12 +186,14 @@ int main(int argc, char *argv[])
     }
 
     int endpoint = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int client;
 
     int option = 1;
     setsockopt(endpoint, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(int));
     setsockopt(endpoint, SOL_SOCKET, SO_REUSEPORT, (const char *)&option, sizeof(int));
 
     struct sockaddr_in address;
+    int address_size = sizeof(address);
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = INADDR_ANY;
@@ -182,9 +202,30 @@ int main(int argc, char *argv[])
 
     listen(endpoint, 3);
 
+    char buffer[PROC_LINE_LENGTH];
+
     while (1)
     {
-        //accept();
+        client = accept(endpoint, (struct sockaddr *)&address, (socklen_t *)&address_size);
+        char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/plain;\r\n\r\n";
+
+        // POSSIBLE ISSUE
+        buffer[0] = '\0';
+
+        int is_ok = read(client, buffer, sizeof(buffer));
+
+        if (is_ok == -1)
+        {
+            // EXITS THE PROGRAM - RESOLVE?
+            close(client);
+            set_error(3);
+        }
+
+        fprintf(stderr, "%s\n", buffer);
+
+        // MODIFY
+        send(client, header, sizeof(header), 0);
+        close(client);
     }
 
     return 0;
