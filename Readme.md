@@ -56,7 +56,9 @@ The command will proceed to download a file in which the correct response is sto
 ### Using the web browser
 
 When accessing the server from the web browser, the URL simply needs to be inserted in the address bar. For example like this:
+
 ![Input: web browser](/images/browser1.png)
 
 The web browser proceeds to generate output similar to this:
+
 ![Output: web browser](/images/browser2.png)
