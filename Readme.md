@@ -17,6 +17,6 @@ These requests are self-explanatory and function exactly as their names suggest.
 ## Details
 
 The server can be launched from the terminal by typing this command (inside the directory with the binary file):
-...
+```
 ./hinfosvc <port_number>
-...
+```
