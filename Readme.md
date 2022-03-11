@@ -27,6 +27,10 @@ The _port_number_ argument is the local port on which the server will listen.
 
 While the server is online, it can be interacted with via _curl_ or _wget_ commands or, if needed, directly from web browser. Examples will be shown in the next few sections.
 
+## Examples
+
+All of the examples will be using _localhost_ as the server address because the client will be the same machine as the server. Port number 12345 will be used.
+
 ### Using _curl_
 
 This is an example of using _curl_ to communicate with the server.
