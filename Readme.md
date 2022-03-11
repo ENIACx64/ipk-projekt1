@@ -20,3 +20,4 @@ The server can be launched from the terminal by typing this command (inside the 
 ```
 ./hinfosvc <port_number>
 ```
+The _port_number_ argument is the local port on which the server will listen.
