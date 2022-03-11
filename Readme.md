@@ -6,4 +6,8 @@
 
 ## Project overview
 
-The purpose of this application is to create a lightweight server communicating via the HTTP protocol, which is able to process three types of simple requests.
+The purpose of this application is to create a lightweight server communicating via the HTTP protocol, which is able to process three types of simple requests. These types are as follows:
+
+* get CPU load
+* get hostname
+* get CPU name
