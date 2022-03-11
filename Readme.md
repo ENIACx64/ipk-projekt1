@@ -29,7 +29,16 @@ While the server is online, it can be interacted with via _curl_ or _wget_ comma
 
 ### Using _curl_
 
-Terminal:
+This is an example of using _curl_ to communicate with the server.
 ```
-curl http://localhost:12345/load
+curl http://localhost:12345/request
+```
+The output should look like this:
+![Output](/images/curl.png)
+
+### Using _wget_
+
+The _wget_ command is used in the exact same manner as the _curl_ command.
+```
+wget http://localhost:12345/request
 ```
