@@ -1,4 +1,4 @@
-# IPK project 1
+# IPK project 1 - lightweight HTTP server
 
 **Author:** Jindřich Vodák
 
@@ -27,6 +27,10 @@ The _port_number_ argument is the local port on which the server will listen.
 
 While the server is online, it can be interacted with via _curl_ or _wget_ commands or, if needed, directly from web browser. Examples will be shown in the next few sections.
 
+The server can be stopped by CTRL+C shortcut.
+
+The content type of server response is _text/plain_.
+
 ## Examples
 
 All of the examples will be using _localhost_ as the server address because the client will be the same machine as the server. Port number 12345 will be used. For privacy reasons, output of the _hostname_ request will not be shown.
@@ -48,3 +52,11 @@ wget http://localhost:12345/request
 ```
 The command will proceed to download a file in which the correct response is stored.
 ![Output: wget](/images/wget.png)
+
+### Using the web browser
+
+When accessing the server from the web browser, the URL simply needs to be inserted in the address bar. For example like this:
+![Input: web browser](/images/browser1.png)
+
+The web browser proceeds to generate output similar to this:
+![Output: web browser](/images/browser2.png)
