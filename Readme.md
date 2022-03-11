@@ -29,7 +29,7 @@ While the server is online, it can be interacted with via _curl_ or _wget_ comma
 
 ## Examples
 
-All of the examples will be using _localhost_ as the server address because the client will be the same machine as the server. Port number 12345 will be used.
+All of the examples will be using _localhost_ as the server address because the client will be the same machine as the server. Port number 12345 will be used. For privacy reasons, output of the _hostname_ request will not be shown.
 
 ### Using _curl_
 
@@ -38,7 +38,7 @@ This is an example of using _curl_ to communicate with the server.
 curl http://localhost:12345/request
 ```
 The output should look like this:
-![Output](/images/curl.png)
+![Output: curl](/images/curl.png)
 
 ### Using _wget_
 
@@ -46,3 +46,5 @@ The _wget_ command is used in the exact same manner as the _curl_ command.
 ```
 wget http://localhost:12345/request
 ```
+The command will proceed to download a file in which the correct response is stored.
+![Output: wget](/images/wget.png)
